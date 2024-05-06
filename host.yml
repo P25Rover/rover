@@ -1,0 +1,23 @@
+nodes:
+  - id: electrode
+    custom:
+      build: cargo build -p electrode
+      source: target/debug/electrode
+      outputs:
+        - camera_image
+        - vision_image
+        - vision_command
+        - lidar_scan
+      env:
+        - LISTENER: localhost:4243
+        - SENDER: localhost:4242
+
+  - id: viewer
+    custom:
+      build: cargo build -p viewer
+      source: target/debug/viewer
+      inputs:
+        camera_image: electrode/camera_image
+        vision_image: electrode/vision_image
+        vision_command: electrode/vision_command
+        lidar_scan: electrode/lidar_scan

@@ -1,0 +1,4 @@
+dora-rs==0.3.3
+numpy==1.26.4
+opencv-python==4.9.0.80
+pyarrow==16.0.0
