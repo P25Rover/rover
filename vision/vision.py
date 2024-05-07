@@ -1,12 +1,14 @@
+import sys
+
+sys.path.append('/Users/enzolevan/Documents/Informatique/Development/p25rover/rover/venv/lib/python3.12/site-packages')
+
 from dora import Node
 
 node = Node()
 
 event = node.next()
-if event["type"] == "INPUT":
-    print(
-        f"""Node received:
-    id: {event["id"]},
-    value: {event["value"]},
-    metadata: {event["metadata"]}"""
-    )
+for event in node:
+    if event["type"] == "INPUT":
+        pass
+    elif event["type"] == "STOP":
+        break

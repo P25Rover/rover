@@ -19,3 +19,7 @@ for event in node:
                 pa.array(frame.ravel()),
                 event["metadata"]
             )
+    if event["type"] == "STOP":
+        break
+
+video_capture.release()

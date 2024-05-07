@@ -5,6 +5,7 @@ use std::{
         Mutex
     }
 };
+use clap::{arg, Command};
 
 use dora_node_api::{
     DoraNode,
@@ -15,6 +16,7 @@ use dora_node_api::{
 };
 
 use simple_logger::SimpleLogger;
+use tokio::net::TcpStream;
 
 struct Packet {
     topic: String,
@@ -26,15 +28,23 @@ struct Shared {
     packets: VecDeque<Packet>
 }
 
-async fn run_listener(shared: Arc<Mutex<Shared>>) {
-    let args: Vec<String> = std::env::args().collect();
-    let listener = args.get(2).unwrap().clone();
-    log::info!("Electrode Listener: {}", listener);
+async fn run_listener(listener: String, shared: Arc<Mutex<Shared>>) {
+    let socket = tokio::net::UdpSocket::bind(listener.clone()).await.unwrap();
 
-    let socket = tokio::net::UdpSocket::bind(listener).await.unwrap();
+    log::info!("Listener: {}", listener);
 
     loop {
-        // Receive a packet
+        // Receive a packet, read it and create a new Packet struct
+
+        let mut buf = [0; 1024];
+
+        let status = socket.try_recv(&mut buf);
+        if let Ok(len) = status {
+            let data = buf[..len].to_vec();
+            let data = String::from_utf8(data).unwrap();
+
+            println!("Listener {} received data from sender: {}", listener, data);
+        }
 
         let shared = shared.lock().unwrap();
 
@@ -45,14 +55,14 @@ async fn run_listener(shared: Arc<Mutex<Shared>>) {
 }
 
 
-async fn run(shared: Arc<Mutex<Shared>>) {
+async fn run(host: String, sender: String, shared: Arc<Mutex<Shared>>) {
     let (mut node, mut events) = DoraNode::init_from_env().unwrap();
 
-    let args: Vec<String> = std::env::args().collect();
-    let sender = args.get(4).unwrap().clone();
-    log::info!("Electrode Sender: {}", sender);
+    let socket = tokio::net::UdpSocket::bind(host.clone()).await.unwrap();
+    socket.connect(sender.clone()).await.unwrap();
 
-    let socket = tokio::net::UdpSocket::bind(sender).await.unwrap();
+    log::info!("Sender: {}", sender);
+    log::info!("node running on : {}", socket.local_addr().unwrap());
 
     while let Some(event) = events.recv() {
         match event {
@@ -94,6 +104,8 @@ async fn run(shared: Arc<Mutex<Shared>>) {
                         final_data.extend_from_slice(topic);
                         final_data.extend_from_slice(data);
 
+                        println!("len data {}", final_data.len());
+
                         let status = socket.send(
                             final_data.as_slice(),
                         ).await;
@@ -114,8 +126,6 @@ async fn run(shared: Arc<Mutex<Shared>>) {
         }
     }
 
-    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-
     let mut shared = shared.lock().unwrap();
     shared.running = false;
 }
@@ -123,7 +133,13 @@ async fn run(shared: Arc<Mutex<Shared>>) {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     SimpleLogger::new().init().unwrap();
 
-    log::info!("Starting Dora Node Electrode");
+    let matches = Command::new("Electrode").about("Dora node for communication between dataflow").arg(arg!(--address <VALUE>).required(true)).arg(arg!(--listener <VALUE>).required(true)).arg(arg!(--sender <VALUE>).required(true)).get_matches();
+
+    let (address, listener, sender) = (matches.get_one::<String>("address").expect("required").clone(), matches.get_one::<String>("listener").expect("required").clone(), matches.get_one::<String>("sender").expect("required").clone());
+
+    let listener = address.clone() + ":" + &listener;
+    let sender = address.clone() + ":" + &sender;
+    let host = address.clone() + ":0";
 
     let shared = Arc::new(Mutex::new(Shared {
         running: true,
@@ -132,13 +148,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let runtime = tokio::runtime::Runtime::new().unwrap();
 
-    let listener_task = runtime.spawn(run_listener(shared.clone()));
-    let main_task = runtime.spawn(run(shared.clone()));
+    let listener_task = runtime.spawn(run_listener(listener, shared.clone()));
+    let main_task = runtime.spawn(run(host, sender, shared.clone()));
 
     let listener = runtime.block_on(listener_task);
     let main = runtime.block_on(main_task);
-
-    log::info!("Dora Node Electrode stopped");
 
     return match (listener, main) {
         (Ok(_), Ok(_)) => Ok(()),

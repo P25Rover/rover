@@ -3,7 +3,7 @@ nodes:
     custom:
       build: cargo build -p electrode
       source: target/debug/electrode
-      args: --listener localhost:4242 --sender localhost:4243
+      args: --address localhost --listener 4242 --sender 4243
       inputs:
         tick: dora/timer/millis/17
       outputs:
