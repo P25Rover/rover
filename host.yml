@@ -3,6 +3,8 @@ nodes:
     custom:
       build: cargo build -p electrode
       source: target/debug/electrode
+      inputs:
+        tick: dora/timer/millis/17
       outputs:
         - camera_image
         - vision_image

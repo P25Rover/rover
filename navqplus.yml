@@ -33,6 +33,7 @@ nodes:
       build: cargo build -p electrode
       source: target/debug/electrode
       inputs:
+        tick: dora/timer/millis/17
         camera_image: camera/image
         vision_image: vision/image
         vision_command: vision/command

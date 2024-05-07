@@ -4,7 +4,7 @@ import pyarrow as pa
 
 node = Node()
 
-video_capture = cv2.VideoCapture(3)
+video_capture = cv2.VideoCapture(0)
 video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
 video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
