@@ -32,15 +32,13 @@ nodes:
     custom:
       build: cargo build -p electrode
       source: target/debug/electrode
+      args: --listener localhost:4243 --sender localhost:4242
       inputs:
         tick: dora/timer/millis/17
         camera_image: camera/image
         vision_image: vision/image
         vision_command: vision/command
         lidar_scan: lidar/scan
-      env:
-        - LISTENER: localhost:4242
-        - SENDER: localhost:4243
 
   - id: synapse
     custom:
