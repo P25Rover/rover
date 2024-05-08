@@ -26,12 +26,11 @@ for event in node:
     if event["type"] == "INPUT":
         data = pa.array(video_capture.ravel())
 
-        print("len data", len(data))
-
         node.send_output(
             "image",
             data,
             event["metadata"]
         )
+
     elif event["type"] == "STOP":
         break
