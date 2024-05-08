@@ -3,7 +3,7 @@ nodes:
     custom:
       build: cargo build -p electrode
       source: target/debug/electrode
-      args: --address localhost --listener 4242 --sender 4243
+      args: --address localhost:7447 --listener host --sender navqplus
       inputs:
         tick: dora/timer/millis/17
       outputs:

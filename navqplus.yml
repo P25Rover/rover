@@ -32,7 +32,7 @@ nodes:
     custom:
       build: cargo build -p electrode
       source: target/debug/electrode
-      args: --listener localhost:4243 --sender localhost:4242
+      args: --address localhost:7447 --listener navqplus --sender host
       inputs:
         tick: dora/timer/millis/17
         camera_image: camera/image
