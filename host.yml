@@ -3,7 +3,7 @@ nodes:
     custom:
       build: cargo build -p electrode
       source: target/debug/electrode
-      args: --protocol udp --listener 10.0.0.6 --sender localhost --port 7443
+      args: --protocol udp --listen 10.0.0.6 --connect localhost --port 7443
       inputs:
         tick: dora/timer/millis/17
       outputs:
@@ -11,3 +11,13 @@ nodes:
         - vision_image
         - vision_command
         - lidar_scan
+
+  - id: viewer
+    custom:
+      build: cargo build -p viewer
+      source: target/debug/viewer
+      inputs:
+        camera_image: electrode/camera_image
+        vision_image: electrode/vision_image
+        vision_command: electrode/vision_command
+        lidar_scan: electrode/lidar_scan

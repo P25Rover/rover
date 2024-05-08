@@ -33,9 +33,9 @@ struct Packet {
 async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let packets = Arc::new(Mutex::new(VecDeque::new()));
 
-    let matches = Command::new("Electrode").version("1.0").about("Dora node for communication between dataflow").arg(arg!(--port <VALUE>).required(true)).arg(arg!(--protocol <VALUE>).required(true)).arg(arg!(--listener <VALUE>).required(true)).arg(arg!(--sender <VALUE>).required(true)).get_matches();
+    let matches = Command::new("Electrode").version("1.0").about("Dora node for communication between dataflow").arg(arg!(--port <VALUE>).required(true)).arg(arg!(--protocol <VALUE>).required(true)).arg(arg!(--listen <VALUE>).required(true)).arg(arg!(--connect <VALUE>).required(true)).get_matches();
 
-    let (listener, sender) = (matches.get_one::<String>("listener").expect("required").clone(), matches.get_one::<String>("sender").expect("required").clone());
+    let (listener, sender) = (matches.get_one::<String>("listen").expect("required").clone(), matches.get_one::<String>("connect").expect("required").clone());
     let (protocol, port) = (matches.get_one::<String>("protocol").expect("required").clone(), matches.get_one::<String>("port").expect("required").clone());
 
     let listener_session = format!("{}/{}:{}", protocol, listener, port);

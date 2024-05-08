@@ -13,9 +13,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             } => match id.as_str() {
                 other => eprintln!("Received input `{other}`"),
             },
-            Event::Stop => {
-                break;
-            }
             _ => {}
         }
     }

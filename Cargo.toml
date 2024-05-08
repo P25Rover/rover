@@ -1,2 +1,2 @@
 [workspace]
-members = ["electrode", "lidar", "synapse", "viewer"]
+members = ["electrode", "lidar", "emulate_lidar", "synapse", "viewer"]

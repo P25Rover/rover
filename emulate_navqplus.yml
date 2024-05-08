@@ -8,11 +8,34 @@ nodes:
       outputs:
         - image
 
+  - id: lidar
+    custom:
+      build: cargo build -p emulate_lidar
+      source: target/debug/emulate_lidar
+      inputs:
+        tick: dora/timer/millis/17
+      outputs:
+        - scan
+
+  - id: vision
+    custom:
+      source: venv/bin/python
+      args: vision/vision.py
+      inputs:
+        image: camera/image
+        scan: lidar/scan
+      outputs:
+        - image
+        - command
+
   - id: electrode
     custom:
       build: cargo build -p electrode
       source: target/debug/electrode
-      args: --protocol udp --listener localhost --sender 10.0.0.6 --port 7443
+      args: --protocol udp --listen localhost --connect 10.0.0.6 --port 7443
       inputs:
         tick: dora/timer/millis/17
         camera_image: camera/image
+        vision_image: vision/image
+        vision_command: vision/command
+        lidar_scan: lidar/scan
