@@ -60,9 +60,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             data: sample.value.payload.contiguous().to_vec()
         };
 
-        log::info!("Received data from Zenoh: {}", packet.topic);
-
-        listener_packets.lock().unwrap().push_back(packet);
+        // If there is not more than 10 packets, push the packet to the queue
+        if listener_packets.lock().unwrap().len() < 10 {
+            listener_packets.lock().unwrap().push_back(packet);
+        }
     }).res().await.unwrap();
 
     let (mut node, mut events) = DoraNode::init_from_env().unwrap();
@@ -78,6 +79,22 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     "tick" => {
                         // Send data received from Zenoh to dataflow
 
+                        let mut packets = packets.lock().unwrap();
+
+                        while let Some(packet) = packets.pop_front() {
+                            let data_id = DataId::from(packet.topic);
+                            let data = packet.data.into_arrow();
+
+                            let status = node.send_output(
+                                data_id,
+                                metadata.parameters.clone(),
+                                data
+                            );
+
+                            if let Err(error) = status {
+                                log::error!("Error sending data to dataflow: {}", error);
+                            }
+                        }
                     },
                     other => {
                         // Send data received from dataflow to Zenoh
@@ -86,12 +103,15 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         let buffer: UInt8Array = data.to_data().into();
                         let data = buffer.values().to_vec();
 
-                        log::info!("Sent data to Zenoh: {}", data_expr);
                         session.put(data_expr, data).res().await.unwrap();
                     }
                 }
             },
             Event::Stop => {
+                subscriber.undeclare().res().await.unwrap();
+
+                session.close().res().await.unwrap();
+
                 break;
             },
             _ => {}
